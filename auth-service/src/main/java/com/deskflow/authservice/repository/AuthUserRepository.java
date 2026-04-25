@@ -1,6 +1,6 @@
-package com.example.authservice.repository;
+package com.deskflow.authservice.repository;
 
-import com.example.authservice.model.AuthUser;
+import com.deskflow.authservice.model.AuthUser;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

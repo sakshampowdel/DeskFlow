@@ -1,10 +1,10 @@
-package com.example.authservice.repository;
+package com.deskflow.authservice.repository;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.example.authservice.model.AuthUser;
-import com.example.authservice.model.Role;
+import com.deskflow.authservice.model.AuthUser;
+import com.deskflow.authservice.model.Role;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

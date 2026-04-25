@@ -1,4 +1,4 @@
-package com.example.authservice.dto.request;
+package com.deskflow.authservice.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

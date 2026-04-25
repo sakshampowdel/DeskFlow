@@ -1,4 +1,4 @@
-package com.example.authservice.model;
+package com.deskflow.authservice.model;
 
 public enum Role {
   SUBMITTER,
