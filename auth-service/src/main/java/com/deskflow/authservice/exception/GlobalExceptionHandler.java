@@ -1,6 +1,6 @@
 package com.deskflow.authservice.exception;
 
-import java.time.LocalDateTime;
+import com.deskflow.authservice.dto.reponse.ErrorResponse;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -13,34 +13,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  private ResponseEntity<Map<String, Object>> mapToErrorResponse(
-      HttpStatus httpStatus, String error, String message, Map<String, String> errors) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", httpStatus.value());
-    body.put("error", error);
-    body.put("message", message);
-
-    if (errors != null) {
-      body.put("errors", errors);
-    }
-
-    return new ResponseEntity<>(body, httpStatus);
+  private ResponseEntity<ErrorResponse> mapToErrorResponse(
+      HttpStatus httpStatus, String message, Map<String, String> errors) {
+    return new ResponseEntity<>(
+        new ErrorResponse(httpStatus.value(), httpStatus.getReasonPhrase(), message, errors),
+        httpStatus);
   }
 
   // Generic Handler
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
+  public ResponseEntity<ErrorResponse> handleException(Exception ex) {
     return mapToErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-        "An unexpected error occurred",
-        null);
+        HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", null);
   }
 
   // 400 Bad Request
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, Object>> handleValidationException(
+  public ResponseEntity<ErrorResponse> handleValidationException(
       MethodArgumentNotValidException ex) {
     Map<String, String> errors = new HashMap<>();
     ex.getBindingResult()
@@ -52,45 +41,36 @@ public class GlobalExceptionHandler {
               errors.put(fieldName, errorMessage);
             });
 
-    return mapToErrorResponse(
-        HttpStatus.BAD_REQUEST,
-        HttpStatus.BAD_REQUEST.getReasonPhrase(),
-        "Validation failed",
-        errors);
+    return mapToErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", errors);
   }
 
   // 401 Unauthorized
   @ExceptionHandler(InvalidCredentialsException.class)
-  public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(
+  public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(
       InvalidCredentialsException ex) {
-    return mapToErrorResponse(
-        HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase(), ex.getMessage(), null);
+    return mapToErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null);
   }
 
   @ExceptionHandler(InvalidTokenException.class)
-  public ResponseEntity<Map<String, Object>> handleInvalidTokenException(InvalidTokenException ex) {
-    return mapToErrorResponse(
-        HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase(), ex.getMessage(), null);
+  public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException ex) {
+    return mapToErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null);
   }
 
   @ExceptionHandler(TokenExpiredException.class)
-  public ResponseEntity<Map<String, Object>> handleTokenExpiredException(TokenExpiredException ex) {
-    return mapToErrorResponse(
-        HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase(), ex.getMessage(), null);
+  public ResponseEntity<ErrorResponse> handleTokenExpiredException(TokenExpiredException ex) {
+    return mapToErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null);
   }
 
   // 404 Not Found
   @ExceptionHandler(UserNotFoundException.class)
-  public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
-    return mapToErrorResponse(
-        HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase(), ex.getMessage(), null);
+  public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
+    return mapToErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null);
   }
 
   // 409 Conflict
   @ExceptionHandler(EmailAlreadyExistsException.class)
-  public ResponseEntity<Map<String, Object>> handleEmailAlreadyExistsException(
+  public ResponseEntity<ErrorResponse> handleEmailAlreadyExistsException(
       EmailAlreadyExistsException ex) {
-    return mapToErrorResponse(
-        HttpStatus.CONFLICT, HttpStatus.CONFLICT.getReasonPhrase(), ex.getMessage(), null);
+    return mapToErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
   }
 }
