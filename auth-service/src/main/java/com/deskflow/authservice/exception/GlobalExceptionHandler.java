@@ -68,8 +68,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(InvalidTokenException.class)
-  public ResponseEntity<Map<String, Object>> handleInvalidTokenException(
-      InvalidCredentialsException ex) {
+  public ResponseEntity<Map<String, Object>> handleInvalidTokenException(InvalidTokenException ex) {
     return mapToErrorResponse(
         HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase(), ex.getMessage(), null);
   }
@@ -92,6 +91,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleEmailAlreadyExistsException(
       EmailAlreadyExistsException ex) {
     return mapToErrorResponse(
-        HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase(), ex.getMessage(), null);
+        HttpStatus.CONFLICT, HttpStatus.CONFLICT.getReasonPhrase(), ex.getMessage(), null);
   }
 }
