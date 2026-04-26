@@ -36,6 +36,12 @@ public class AuthUserService {
         authUser, refreshTokenService.createRefreshToken(authUser.getId()));
   }
 
+  private AuthUser findUserById(String userId) {
+    return authUserRepository
+        .findById(userId)
+        .orElseThrow(() -> new RuntimeException("User " + userId + " not found"));
+  }
+
   public RegisterResponse registerUser(RegisterRequest registerRequest) {
     // Email already exists
     if (authUserRepository.existsByEmail(registerRequest.email())) {
@@ -66,12 +72,7 @@ public class AuthUserService {
 
   public AuthTokenResponse refreshUser(RefreshTokenRequest refreshTokenRequest) {
     RefreshToken refreshToken = refreshTokenService.validate(refreshTokenRequest.refreshToken());
-
-    AuthUser user =
-        authUserRepository
-            .findById(refreshToken.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
+    AuthUser user = findUserById(refreshToken.getUserId());
     return mapToAuthTokenResponse(user, refreshToken);
   }
 
@@ -80,10 +81,7 @@ public class AuthUserService {
   }
 
   public void updateUserPassword(String userId, ChangePasswordRequest changePasswordRequest) {
-    AuthUser user =
-        authUserRepository
-            .findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    AuthUser user = findUserById(userId);
 
     if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPasswordHash())) {
       throw new RuntimeException("Wrong password");
@@ -93,21 +91,8 @@ public class AuthUserService {
     authUserRepository.save(user);
   }
 
-  public void updateUserRole(String adminId, String userId, ChangeRoleRequest changeRoleRequest) {
-    AuthUser admin =
-        authUserRepository
-            .findById(adminId)
-            .orElseThrow(() -> new RuntimeException("Admin not found"));
-
-    if (!admin.getRole().equals(Role.ADMIN)) {
-      throw new RuntimeException("No permission to change roles");
-    }
-
-    AuthUser user =
-        authUserRepository
-            .findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
+  public void updateUserRole(String userId, ChangeRoleRequest changeRoleRequest) {
+    AuthUser user = findUserById(userId);
     user.setRole(changeRoleRequest.role());
     authUserRepository.save(user);
   }
