@@ -3,6 +3,9 @@ package com.deskflow.authservice.service;
 import com.deskflow.authservice.dto.reponse.AuthTokenResponse;
 import com.deskflow.authservice.dto.reponse.RegisterResponse;
 import com.deskflow.authservice.dto.request.*;
+import com.deskflow.authservice.exception.EmailAlreadyExistsException;
+import com.deskflow.authservice.exception.InvalidCredentialsException;
+import com.deskflow.authservice.exception.UserNotFoundException;
 import com.deskflow.authservice.model.AuthUser;
 import com.deskflow.authservice.model.RefreshToken;
 import com.deskflow.authservice.model.Role;
@@ -39,13 +42,12 @@ public class AuthUserService {
   private AuthUser findUserById(String userId) {
     return authUserRepository
         .findById(userId)
-        .orElseThrow(() -> new RuntimeException("User " + userId + " not found"));
+        .orElseThrow(() -> new UserNotFoundException("User not found"));
   }
 
   public RegisterResponse registerUser(RegisterRequest registerRequest) {
-    // Email already exists
     if (authUserRepository.existsByEmail(registerRequest.email())) {
-      throw new RuntimeException("Email already exists");
+      throw new EmailAlreadyExistsException("Email already exists");
     }
 
     String email = registerRequest.email();
@@ -61,10 +63,10 @@ public class AuthUserService {
     AuthUser user =
         authUserRepository
             .findByEmail(loginRequest.email())
-            .orElseThrow(() -> new RuntimeException("Email does not exist"));
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
     if (!passwordEncoder.matches(loginRequest.password(), user.getPasswordHash())) {
-      throw new RuntimeException("Wrong password");
+      throw new InvalidCredentialsException("Invalid email or password");
     }
 
     return mapToAuthTokenResponse(user);

@@ -1,5 +1,7 @@
 package com.deskflow.authservice.service;
 
+import com.deskflow.authservice.exception.InvalidTokenException;
+import com.deskflow.authservice.exception.TokenExpiredException;
 import com.deskflow.authservice.model.RefreshToken;
 import com.deskflow.authservice.repository.RefreshTokenRepository;
 import java.time.Instant;
@@ -20,7 +22,7 @@ public class RefreshTokenService {
   private RefreshToken findByToken(String token) {
     return refreshTokenRepository
         .findByToken(token)
-        .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+        .orElseThrow(() -> new InvalidTokenException("Invalid token"));
   }
 
   public RefreshToken createRefreshToken(String userId) {
@@ -34,11 +36,11 @@ public class RefreshTokenService {
     RefreshToken refreshToken = findByToken(token);
 
     if (refreshToken.isRevoked()) {
-      throw new RuntimeException("Refresh token revoked");
+      throw new InvalidTokenException("Invalid token");
     }
 
     if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
-      throw new RuntimeException("Refresh token expired");
+      throw new TokenExpiredException("Token expired");
     }
 
     return refreshToken;
