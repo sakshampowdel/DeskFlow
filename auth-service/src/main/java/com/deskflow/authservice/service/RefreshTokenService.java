@@ -17,6 +17,12 @@ public class RefreshTokenService {
 
   private final RefreshTokenRepository refreshTokenRepository;
 
+  private RefreshToken findByToken(String token) {
+    return refreshTokenRepository
+        .findByToken(token)
+        .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+  }
+
   public RefreshToken createRefreshToken(String userId) {
     RefreshToken token =
         new RefreshToken(
@@ -25,10 +31,7 @@ public class RefreshTokenService {
   }
 
   public RefreshToken validate(String token) {
-    RefreshToken refreshToken =
-        refreshTokenRepository
-            .findByToken(token)
-            .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+    RefreshToken refreshToken = findByToken(token);
 
     if (refreshToken.isRevoked()) {
       throw new RuntimeException("Refresh token revoked");
@@ -42,10 +45,7 @@ public class RefreshTokenService {
   }
 
   public void revoke(String token) {
-    RefreshToken refreshToken =
-        refreshTokenRepository
-            .findByToken(token)
-            .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+    RefreshToken refreshToken = findByToken(token);
     refreshToken.setRevoked(true);
     refreshTokenRepository.save(refreshToken);
   }
