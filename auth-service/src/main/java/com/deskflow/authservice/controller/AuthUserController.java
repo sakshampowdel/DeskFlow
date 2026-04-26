@@ -54,7 +54,7 @@ public class AuthUserController {
       @RequestHeader("X-User-Id") String adminId,
       @PathVariable String userId,
       @Valid @RequestBody ChangeRoleRequest changeRoleRequest) {
-    authUserService.updateUserRole(adminId, userId, changeRoleRequest);
+    authUserService.updateUserRole(userId, changeRoleRequest);
     return ResponseEntity.noContent().build();
   }
 }
