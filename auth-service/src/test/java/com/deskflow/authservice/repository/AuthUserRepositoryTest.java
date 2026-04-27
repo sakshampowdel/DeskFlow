@@ -3,6 +3,7 @@ package com.deskflow.authservice.repository;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.deskflow.authservice.config.MongoConfig;
 import com.deskflow.authservice.model.AuthUser;
 import com.deskflow.authservice.model.Role;
 import java.util.Optional;
@@ -11,9 +12,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DuplicateKeyException;
 
 @DataMongoTest
+@Import(MongoConfig.class)
 public class AuthUserRepositoryTest {
 
   @Autowired private AuthUserRepository authUserRepository;
