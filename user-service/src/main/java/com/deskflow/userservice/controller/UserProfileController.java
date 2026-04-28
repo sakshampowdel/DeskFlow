@@ -23,36 +23,37 @@ public class UserProfileController {
   @GetMapping("/me")
   public ResponseEntity<UserProfileResponse> getMyProfile(
       @RequestHeader("X-User-Id") String userId) {
-    return null;
+    return ResponseEntity.ok(userProfileService.getMyProfile(userId));
   }
 
   @PatchMapping("/me")
   public ResponseEntity<UserProfileResponse> updateMyProfile(
       @RequestHeader("X-User-Id") String userId,
       @Valid @RequestBody UpdateProfileRequest updateProfileRequest) {
-    return null;
+    return ResponseEntity.ok(userProfileService.updateMyProfile(userId, updateProfileRequest));
   }
 
   @GetMapping("/{userId}")
   public ResponseEntity<UserProfileResponse> getUserById(
       @RequestHeader("X-User-Id") String callerId, @PathVariable String userId) {
-    return null;
+    return ResponseEntity.ok(userProfileService.getUserById(userId));
   }
 
   @GetMapping
   public ResponseEntity<PagedUserResponse> getAllUsers(
       @RequestHeader("X-User-Id") String callerId, @Validated PagedUserRequest request) {
-    return null;
+    return ResponseEntity.ok(userProfileService.getAllUsers(request));
   }
 
   @PatchMapping("/{userId}/deactivate")
   public ResponseEntity<Void> deactivateUser(
       @RequestHeader("X-User-Id") String adminId, @PathVariable String userId) {
-    return null;
+    userProfileService.deactivateUser(userId);
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/internal/{userId}")
   public ResponseEntity<InternalUserResponse> getInternalUserSummary(@PathVariable String userId) {
-    return null;
+    return ResponseEntity.ok(userProfileService.getInternalUserSummary(userId));
   }
 }
