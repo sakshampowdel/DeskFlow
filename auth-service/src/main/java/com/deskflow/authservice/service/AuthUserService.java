@@ -63,10 +63,10 @@ public class AuthUserService {
     AuthUser user =
         authUserRepository
             .findByEmail(loginRequest.email())
-            .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
     if (!passwordEncoder.matches(loginRequest.password(), user.getPasswordHash())) {
-      throw new InvalidCredentialsException("Invalid email or password");
+      throw new InvalidCredentialsException("Invalid credentials");
     }
 
     return mapToAuthTokenResponse(user);
@@ -86,7 +86,7 @@ public class AuthUserService {
     AuthUser user = findUserById(userId);
 
     if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPasswordHash())) {
-      throw new RuntimeException("Wrong password");
+      throw new InvalidCredentialsException("Invalid credentials");
     }
 
     user.setPasswordHash(passwordEncoder.encode(changePasswordRequest.newPassword()));
