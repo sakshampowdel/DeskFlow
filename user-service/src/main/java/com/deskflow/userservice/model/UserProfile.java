@@ -7,13 +7,14 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "user_profiles")
 @Getter
 @NoArgsConstructor
-public class UserProfile {
+public class UserProfile implements Persistable<String> {
 
   @Id private String id;
 
@@ -42,5 +43,10 @@ public class UserProfile {
 
   public void syncEmail(String newEmail) {
     this.email = newEmail;
+  }
+
+  @Override
+  public boolean isNew() {
+    return createdAt == null;
   }
 }
