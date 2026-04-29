@@ -20,12 +20,12 @@ public class Ticket {
   private String title;
   private String description;
   @Setter private Status status;
-  private Priority priority;
+  @Setter private Priority priority;
   private Category category;
   private String reporterId;
   @Setter private String assigneeId;
   private List<String> attachmentUrls;
-  private Instant slaDeadline;
+  @Setter private Instant slaDeadline;
   @Setter private boolean slaBreached;
   @Setter private String resolutionNote;
   private List<TicketComment> comments = new ArrayList<>();
