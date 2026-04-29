@@ -1,6 +1,7 @@
 package com.deskflow.ticketservice.model;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class Ticket {
   private Instant slaDeadline;
   @Setter private boolean slaBreached;
   @Setter private String resolutionNote;
+  private List<TicketComment> comments = new ArrayList<>();
 
   @CreatedDate private Instant createdAt;
 
@@ -41,9 +43,11 @@ public class Ticket {
       Instant slaDeadline) {
     this.title = title;
     this.description = description;
+    this.status = Status.OPEN;
     this.priority = priority;
     this.category = category;
     this.reporterId = reporterId;
+    this.attachmentUrls = new ArrayList<>();
     this.slaDeadline = slaDeadline;
   }
 }
