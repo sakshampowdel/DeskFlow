@@ -9,6 +9,7 @@ import com.deskflow.ticketservice.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,8 @@ public class TicketController {
   public ResponseEntity<TicketResponse> createTicket(
       @RequestHeader("X-User-Id") String reporterId,
       @Valid @RequestBody CreateTicketRequest createTicketRequest) {
-    return null;
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ticketService.createTicket(reporterId, createTicketRequest));
   }
 
   @GetMapping
@@ -34,14 +36,14 @@ public class TicketController {
       @RequestHeader("X-User-Id") String requesterId,
       @RequestHeader("X-User-Role") String requesterRole,
       @ModelAttribute @Valid PagedTicketRequest pagedTicketRequest) {
-    return null;
+    return ResponseEntity.ok(ticketService.getAllTickets(pagedTicketRequest));
   }
 
   @GetMapping("/me")
   public ResponseEntity<PagedTicketResponse> getMyTickets(
       @RequestHeader("X-User-Id") String userId,
       @ModelAttribute @Valid PagedTicketRequest pagedTicketRequest) {
-    return null;
+    return ResponseEntity.ok(ticketService.getMyTickets(userId, pagedTicketRequest));
   }
 
   @GetMapping("/{ticketId}")
@@ -49,7 +51,7 @@ public class TicketController {
       @RequestHeader("X-User-Id") String requesterId,
       @RequestHeader("X-User-Role") String requesterRole,
       @PathVariable String ticketId) {
-    return null;
+    return ResponseEntity.ok(ticketService.getTicketById(requesterId, requesterRole, ticketId));
   }
 
   @PatchMapping("/{ticketId}/status")
@@ -58,7 +60,8 @@ public class TicketController {
       @RequestHeader("X-User-Role") String updaterRole,
       @Valid @RequestBody UpdateStatusRequest updateStatusRequest,
       @PathVariable String ticketId) {
-    return null;
+    ticketService.updateTicketStatus(updaterId, updaterRole, ticketId, updateStatusRequest);
+    return ResponseEntity.noContent().build();
   }
 
   @PatchMapping("/{ticketId}/assign")
@@ -67,7 +70,8 @@ public class TicketController {
       @RequestHeader("X-User-Role") String assignedByRole,
       @Valid @RequestBody AssignTicketRequest assignTicketRequest,
       @PathVariable String ticketId) {
-    return null;
+    ticketService.assignTicket(assignedById, assignedByRole, ticketId, assignTicketRequest);
+    return ResponseEntity.noContent().build();
   }
 
   @PatchMapping("/{ticketId}/priority")
@@ -76,7 +80,8 @@ public class TicketController {
       @RequestHeader("X-User-Role") String updaterRole,
       @Valid @RequestBody UpdatePriorityRequest updatePriorityRequest,
       @PathVariable String ticketId) {
-    return null;
+    ticketService.updateTicketPriority(updaterId, ticketId, updatePriorityRequest);
+    return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/{ticketId}/comments")
@@ -85,7 +90,8 @@ public class TicketController {
       @RequestHeader("X-User-Role") String commenterRole,
       @Valid @RequestBody AddCommentRequest addCommentRequest,
       @PathVariable String ticketId) {
-    return null;
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ticketService.addComment(commenterId, commenterRole, ticketId, addCommentRequest));
   }
 
   @GetMapping("/{ticketId}/comments")
@@ -93,7 +99,7 @@ public class TicketController {
       @RequestHeader("X-User-Id") String requesterId,
       @RequestHeader("X-User-Role") String requesterRole,
       @PathVariable String ticketId) {
-    return null;
+    return ResponseEntity.ok(ticketService.getComments(requesterId, requesterRole, ticketId));
   }
 
   @PostMapping("/{ticketId}/attachments")
@@ -101,6 +107,7 @@ public class TicketController {
       @RequestHeader("X-User-Id") String uploaderId,
       @RequestParam("file") MultipartFile file,
       @PathVariable String ticketId) {
-    return null;
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ticketService.uploadAttachment(uploaderId, ticketId, file));
   }
 }
