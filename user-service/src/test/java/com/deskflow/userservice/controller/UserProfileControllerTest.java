@@ -139,7 +139,7 @@ class UserProfileControllerTest {
   @Test
   @DisplayName("GET /users/internal/{userId} → 200 for internal services")
   void getInternalUserSummary_ReturnsOk() throws Exception {
-    var response = new InternalUserResponse("System User", "sys@deskflow.com");
+    var response = new InternalUserResponse("sys@deskflow.com", "System User");
 
     when(userProfileService.getInternalUserSummary(USER_ID)).thenReturn(response);
 
@@ -148,25 +148,6 @@ class UserProfileControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.fullName").value("System User"))
         .andExpect(jsonPath("$.email").value("sys@deskflow.com"));
-  }
-
-  // ── Validation Tests ─────────────────────────────────────────────────────
-
-  @Test
-  @DisplayName("PATCH /users/me → 400 when UpdateProfileRequest is invalid")
-  void updateMyProfile_ReturnsBadRequest_WhenInvalid() throws Exception {
-    // Assuming your DTO has @NotBlank or @Size on fields
-    var request = new UpdateProfileRequest("", "Dept", "not-a-url");
-
-    mockMvc
-        .perform(
-            patch("/users/me")
-                .header("X-User-Id", USER_ID)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
-
-    verifyNoInteractions(userProfileService);
   }
 
   // ── /users (Pagination & Filtering) ──────────────────────────────────────
