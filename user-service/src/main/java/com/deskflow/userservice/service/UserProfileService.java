@@ -74,6 +74,6 @@ public class UserProfileService {
 
   public InternalUserResponse getInternalUserSummary(String userId) {
     UserProfile profile = findById(userId);
-    return new InternalUserResponse(profile.getFullName(), profile.getEmail());
+    return new InternalUserResponse(profile.getEmail(), profile.getFullName());
   }
 }
