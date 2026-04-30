@@ -21,7 +21,7 @@ public class UserProfile implements Persistable<String> {
   @Indexed(unique = true)
   private String email;
 
-  private Role role;
+  @Setter private Role role;
   @Setter private String fullName;
   @Setter private String department;
   @Setter private String avatarUrl;
