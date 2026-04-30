@@ -6,9 +6,12 @@ import com.deskflow.userservice.dto.response.InternalUserResponse;
 import com.deskflow.userservice.dto.response.PagedUserResponse;
 import com.deskflow.userservice.dto.response.UserProfileResponse;
 import com.deskflow.userservice.exception.UserNotFoundException;
+import com.deskflow.userservice.model.Role;
 import com.deskflow.userservice.model.UserProfile;
 import com.deskflow.userservice.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -56,8 +59,16 @@ public class UserProfileService {
   }
 
   public PagedUserResponse getAllUsers(PagedUserRequest request) {
+    UserProfile probe = new UserProfile();
+    if (request.role() != null) probe.setRole(Role.valueOf(request.role()));
+    if (request.department() != null) probe.setDepartment(request.department());
+
+    ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues();
+    Example<UserProfile> example = Example.of(probe, matcher);
+
     Page<UserProfile> page =
-        userProfileRepository.findAll(PageRequest.of(request.page(), request.size()));
+        userProfileRepository.findAll(example, PageRequest.of(request.page(), request.size()));
+
     return new PagedUserResponse(
         page.getContent().stream().map(this::mapToUserProfileResponse).toList(),
         page.getNumber(),
