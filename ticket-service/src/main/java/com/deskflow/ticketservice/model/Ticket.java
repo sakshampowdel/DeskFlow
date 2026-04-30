@@ -21,7 +21,7 @@ public class Ticket {
   private String description;
   @Setter private Status status;
   @Setter private Priority priority;
-  private Category category;
+  @Setter private Category category;
   private String reporterId;
   @Setter private String assigneeId;
   private List<String> attachmentUrls;

@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -102,8 +104,19 @@ public class TicketService {
   }
 
   public PagedTicketResponse getAllTickets(PagedTicketRequest request) {
-    // TODO: filter by status, priority, category, assigneeId, slaBreached via QueryByExample
-    Page<Ticket> page = ticketRepository.findAll(PageRequest.of(request.page(), request.size()));
+    Ticket probe = new Ticket();
+    if (request.status() != null) probe.setStatus(request.status());
+    if (request.priority() != null) probe.setPriority(request.priority());
+    if (request.category() != null) probe.setCategory(request.category());
+    if (request.assigneeId() != null) probe.setAssigneeId(request.assigneeId());
+    if (request.slaBreached() != null) probe.setSlaBreached(request.slaBreached());
+
+    ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues();
+    Example<Ticket> example = Example.of(probe, matcher);
+
+    Page<Ticket> page =
+        ticketRepository.findAll(example, PageRequest.of(request.page(), request.size()));
+
     return new PagedTicketResponse(
         page.getContent().stream().map(this::mapToSummaryResponse).toList(),
         page.getNumber(),
