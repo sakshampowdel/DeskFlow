@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Database for Auth Service
   auth-mongodb:
@@ -23,6 +21,18 @@ services:
     volumes:
       - user-data:/data/db
 
+  # Database for Ticket Service
+  ticket-mongodb:
+    image: mongo:latest
+    container_name: ticket-mongodb
+    ports:
+      - '27019:27017' # Map host 27019 to container 27017
+    environment:
+      - MONGO_INITDB_DATABASE=ticket-db
+    volumes:
+      - ticket-data:/data/db
+
 volumes:
   auth-data:
   user-data:
+  ticket-data:
