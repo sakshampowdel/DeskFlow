@@ -41,7 +41,8 @@ public class UserProfileController {
 
   @GetMapping
   public ResponseEntity<PagedUserResponse> getAllUsers(
-      @RequestHeader("X-User-Id") String callerId, @Validated PagedUserRequest request) {
+      @RequestHeader("X-User-Id") String callerId,
+      @ModelAttribute @Valid PagedUserRequest request) {
     return ResponseEntity.ok(userProfileService.getAllUsers(request));
   }
 
