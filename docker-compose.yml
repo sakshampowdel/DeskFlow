@@ -32,7 +32,19 @@ services:
     volumes:
       - ticket-data:/data/db
 
+  # Database for Notification Service
+  notification-mongodb:
+    image: mongo:latest
+    container_name: notification-mongodb
+    ports:
+      - '27020:27017' # Map host 27020 to container 27017
+    environment:
+      - MONGO_INITDB_DATABASE=notification-db
+    volumes:
+      - notification-data:/data/db
+
 volumes:
   auth-data:
   user-data:
   ticket-data:
+  notification-data:
