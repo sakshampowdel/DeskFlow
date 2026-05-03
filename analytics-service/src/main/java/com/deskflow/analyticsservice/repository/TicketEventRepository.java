@@ -12,6 +12,7 @@ public interface TicketEventRepository extends MongoRepository<TicketEvent, Stri
 
   @Aggregation(
       pipeline = {
+        "{ $match: { status: { $ne: null } } }",
         "{ $group: { _id: '$status', count: { $sum: 1 } } }",
         "{ $project: { label: '$_id', count: 1, _id: 0 } }"
       })

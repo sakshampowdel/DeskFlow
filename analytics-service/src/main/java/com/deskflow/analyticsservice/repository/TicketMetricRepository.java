@@ -61,10 +61,23 @@ public interface TicketMetricRepository extends MongoRepository<TicketMetric, St
         "{ $group: { "
             + "    _id: '$assigneeId', "
             + "    ticketsAssigned: { $sum: 1 }, "
-            + "    ticketsResolved: { $sum: { $cond: [{ $ne: ['$resolvedAt', null] }, 1, 0] } }, "
-            + "    avgResolutionTimeMs: { $avg: '$timeToResolveMs' } "
+            + "    ticketsResolved: { "
+            + "      $sum: { "
+            + "        $cond: [ "
+            + "          { $gt: ['$resolvedAt', null] }, "
+            + "          1, 0 "
+            + "        ] "
+            + "      } "
+            + "    }, "
+            + "    avgResTime: { $avg: '$timeToResolveMs' } "
             + "} }",
-        "{ $project: { assigneeId: '$_id', ticketsAssigned: 1, ticketsResolved: 1, avgResolutionTimeMs: 1, _id: 0 } }"
+        "{ $project: { "
+            + "    assigneeId: '$_id', "
+            + "    ticketsAssigned: 1, "
+            + "    ticketsResolved: 1, "
+            + "    avgResolutionTimeMs: { $ifNull: ['$avgResTime', 0.0] }, "
+            + "    _id: 0 "
+            + "} }"
       })
   List<AgentStatsResponse> getAgentStats();
 }
