@@ -15,7 +15,7 @@ services:
     image: mongo:latest
     container_name: user-mongodb
     ports:
-      - '27018:27017' # Map host 27018 to container 27017
+      - '27018:27017'
     environment:
       - MONGO_INITDB_DATABASE=user-db
     volumes:
@@ -26,7 +26,7 @@ services:
     image: mongo:latest
     container_name: ticket-mongodb
     ports:
-      - '27019:27017' # Map host 27019 to container 27017
+      - '27019:27017'
     environment:
       - MONGO_INITDB_DATABASE=ticket-db
     volumes:
@@ -37,14 +37,26 @@ services:
     image: mongo:latest
     container_name: notification-mongodb
     ports:
-      - '27020:27017' # Map host 27020 to container 27017
+      - '27020:27017'
     environment:
       - MONGO_INITDB_DATABASE=notification-db
     volumes:
       - notification-data:/data/db
+
+  # Database for Analytics Service
+  analytics-mongodb:
+    image: mongo:latest
+    container_name: analytics-mongodb
+    ports:
+      - '27021:27017' # Map host 27021 to container 27017
+    environment:
+      - MONGO_INITDB_DATABASE=analytics-db
+    volumes:
+      - analytics-data:/data/db
 
 volumes:
   auth-data:
   user-data:
   ticket-data:
   notification-data:
+  analytics-data:
