@@ -1,62 +1,93 @@
 services:
-  # Database for Auth Service
+  # --- DATABASES ---
   auth-mongodb:
     image: mongo:latest
     container_name: auth-mongodb
-    ports:
-      - '27017:27017'
-    environment:
-      - MONGO_INITDB_DATABASE=auth-db
-    volumes:
-      - auth-data:/data/db
-
-  # Database for User Service
+    ports: ['27017:27017']
+    environment: [MONGO_INITDB_DATABASE=auth-db]
+    volumes: [auth-data:/data/db]
+    networks: [app-network]
   user-mongodb:
     image: mongo:latest
     container_name: user-mongodb
-    ports:
-      - '27018:27017'
-    environment:
-      - MONGO_INITDB_DATABASE=user-db
-    volumes:
-      - user-data:/data/db
-
-  # Database for Ticket Service
+    ports: ['27018:27017']
+    environment: [MONGO_INITDB_DATABASE=user-db]
+    volumes: [user-data:/data/db]
+    networks: [app-network]
   ticket-mongodb:
     image: mongo:latest
     container_name: ticket-mongodb
-    ports:
-      - '27019:27017'
-    environment:
-      - MONGO_INITDB_DATABASE=ticket-db
-    volumes:
-      - ticket-data:/data/db
-
-  # Database for Notification Service
+    ports: ['27019:27017']
+    environment: [MONGO_INITDB_DATABASE=ticket-db]
+    volumes: [ticket-data:/data/db]
+    networks: [app-network]
   notification-mongodb:
     image: mongo:latest
     container_name: notification-mongodb
-    ports:
-      - '27020:27017'
-    environment:
-      - MONGO_INITDB_DATABASE=notification-db
-    volumes:
-      - notification-data:/data/db
-
-  # Database for Analytics Service
+    ports: ['27020:27017']
+    environment: [MONGO_INITDB_DATABASE=notification-db]
+    volumes: [notification-data:/data/db]
+    networks: [app-network]
   analytics-mongodb:
     image: mongo:latest
     container_name: analytics-mongodb
+    ports: ['27021:27017']
+    environment: [MONGO_INITDB_DATABASE=analytics-db]
+    volumes: [analytics-data:/data/db]
+    networks: [app-network]
+  # --- KAFKA INFRASTRUCTURE ---
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
     ports:
-      - '27021:27017' # Map host 27021 to container 27017
+      - '9092:9092'
     environment:
-      - MONGO_INITDB_DATABASE=analytics-db
-    volumes:
-      - analytics-data:/data/db
-
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'kafka-broker-api-versions',
+          '--bootstrap-server',
+          'kafka:29092',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes: [kafka-data:/var/lib/kafka/data]
+    networks: [app-network]
+  # GUI to see your messages (Visit http://localhost:8888)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - '8888:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    networks: [app-network]
+networks:
+  app-network:
+    driver: bridge
 volumes:
   auth-data:
   user-data:
   ticket-data:
   notification-data:
   analytics-data:
+  kafka-data:
