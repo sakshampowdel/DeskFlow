@@ -3,6 +3,7 @@ package com.deskflow.notificationservice.service;
 import com.deskflow.notificationservice.dto.event.*;
 import com.deskflow.notificationservice.model.KafkaEventType;
 import com.deskflow.notificationservice.model.Type;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -12,10 +13,12 @@ import org.springframework.stereotype.Component;
 public class TicketEventListener {
 
   private final NotificationLogService notificationLogService;
+  private final ObjectMapper objectMapper;
 
   @KafkaListener(topics = "TICKET_CREATED", groupId = "notification-group")
-  public void handleCreated(EventEnvelope<TicketCreatedEvent> envelope) {
-    TicketCreatedEvent ticketCreatedEvent = envelope.payload();
+  public void handleCreated(EventEnvelope<?> envelope) {
+    TicketCreatedEvent ticketCreatedEvent =
+        objectMapper.convertValue(envelope.payload(), TicketCreatedEvent.class);
     notificationLogService.createAndPush(
         ticketCreatedEvent.reporterId(),
         Type.WEBSOCKET_PUSH,
@@ -26,8 +29,9 @@ public class TicketEventListener {
   }
 
   @KafkaListener(topics = "TICKET_UPDATED", groupId = "notification-group")
-  public void handleUpdated(EventEnvelope<TicketUpdatedEvent> envelope) {
-    TicketUpdatedEvent ticketUpdatedEvent = envelope.payload();
+  public void handleUpdated(EventEnvelope<?> envelope) {
+    TicketUpdatedEvent ticketUpdatedEvent =
+        objectMapper.convertValue(envelope.payload(), TicketUpdatedEvent.class);
     notificationLogService.createAndPush(
         ticketUpdatedEvent.reporterId(),
         Type.WEBSOCKET_PUSH,
@@ -38,8 +42,9 @@ public class TicketEventListener {
   }
 
   @KafkaListener(topics = "TICKET_ASSIGNED", groupId = "notification-group")
-  public void handleAssigned(EventEnvelope<TicketAssignedEvent> envelope) {
-    TicketAssignedEvent ticketAssignedEvent = envelope.payload();
+  public void handleAssigned(EventEnvelope<?> envelope) {
+    TicketAssignedEvent ticketAssignedEvent =
+        objectMapper.convertValue(envelope.payload(), TicketAssignedEvent.class);
     notificationLogService.createAndPush(
         ticketAssignedEvent.assigneeId(),
         Type.WEBSOCKET_PUSH,
@@ -50,8 +55,9 @@ public class TicketEventListener {
   }
 
   @KafkaListener(topics = "TICKET_RESOLVED", groupId = "notification-group")
-  public void handleResolved(EventEnvelope<TicketResolvedEvent> envelope) {
-    TicketResolvedEvent ticketResolvedEvent = envelope.payload();
+  public void handleResolved(EventEnvelope<?> envelope) {
+    TicketResolvedEvent ticketResolvedEvent =
+        objectMapper.convertValue(envelope.payload(), TicketResolvedEvent.class);
     notificationLogService.createAndPush(
         ticketResolvedEvent.reporterId(),
         Type.WEBSOCKET_PUSH,
