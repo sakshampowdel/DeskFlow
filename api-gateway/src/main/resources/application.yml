@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Auth Service: http://localhost:8080/auth/** -> http://localhost:8081/**
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: CustomLoggingFilter # Our Java code below
+
+        # User Service: http://localhost:8080/user/** -> http://localhost:8082/**
+        - id: user-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/user/**
+          filters:
+            - name: CustomLoggingFilter
+
+# Disable Eureka for now so it doesn't crash while you're testing locally
+eureka:
+  client:
+    enabled: false
