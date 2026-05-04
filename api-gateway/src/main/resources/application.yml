@@ -1,29 +1,44 @@
 server:
   port: 8080
 
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      routes:
-        # Auth Service: http://localhost:8080/auth/** -> http://localhost:8081/**
-        - id: auth-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/auth/**
-          filters:
-            - name: CustomLoggingFilter # Our Java code below
+      server:
+        webflux:
+          routes:
+          # Auth Service: http://localhost:8080/auth/** -> http://localhost:8081/**
+          - id: auth-service
+            uri: http://localhost:8081
+            predicates:
+              - Path=/auth/**
+            filters:
+              - CustomLogging # Matches the class name minus "FilterFactory"
 
-        # User Service: http://localhost:8080/user/** -> http://localhost:8082/**
-        - id: user-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/user/**
-          filters:
-            - name: CustomLoggingFilter
+          # User Service: http://localhost:8080/users/** -> http://localhost:8082/**
+          - id: user-service
+            uri: http://localhost:8082
+            predicates:
+              - Path=/users/**
+            filters:
+              - CustomLogging
 
-# Disable Eureka for now so it doesn't crash while you're testing locally
+          # Ticket Service: http://localhost:8080/tickets/** -> http://localhost:8083/**
+          - id: ticket-service
+            uri: http://localhost:8083
+            predicates:
+              - Path=/tickets/**
+            filters:
+              - StripPrefix=1
+
 eureka:
   client:
     enabled: false
