@@ -87,4 +87,16 @@ public class UserProfileService {
     UserProfile profile = findById(userId);
     return new InternalUserResponse(profile.getEmail(), profile.getFullName());
   }
+
+  public void createInitialProfile(String userId, String email, Role role) {
+    UserProfile profile = new UserProfile(userId, email, role);
+    profile.setActive(true);
+    userProfileRepository.save(profile);
+  }
+
+  public void updateUserRole(String userId, Role newRole) {
+    UserProfile profile = findById(userId);
+    profile.setRole(newRole);
+    userProfileRepository.save(profile);
+  }
 }
