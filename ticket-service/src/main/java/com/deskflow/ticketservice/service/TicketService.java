@@ -1,5 +1,9 @@
 package com.deskflow.ticketservice.service;
 
+import com.deskflow.ticketservice.dto.event.TicketAssignedEvent;
+import com.deskflow.ticketservice.dto.event.TicketCreatedEvent;
+import com.deskflow.ticketservice.dto.event.TicketResolvedEvent;
+import com.deskflow.ticketservice.dto.event.TicketUpdatedEvent;
 import com.deskflow.ticketservice.dto.request.*;
 import com.deskflow.ticketservice.dto.response.*;
 import com.deskflow.ticketservice.exception.*;
@@ -31,6 +35,7 @@ public class TicketService {
           Status.CLOSED, EnumSet.noneOf(Status.class));
 
   private final TicketRepository ticketRepository;
+  private final TicketEventPublisher ticketEventPublisher;
 
   private Ticket findById(String ticketId) {
     return ticketRepository
@@ -100,7 +105,20 @@ public class TicketService {
             request.category(),
             reporterId,
             calculateSlaDeadline(request.priority()));
-    return mapToTicketResponse(ticketRepository.save(ticket));
+
+    Ticket savedTicket = ticketRepository.save(ticket);
+    TicketCreatedEvent ticketCreatedEvent =
+        new TicketCreatedEvent(
+            savedTicket.getId(),
+            savedTicket.getTitle(),
+            savedTicket.getPriority(),
+            savedTicket.getCategory(),
+            savedTicket.getReporterId(),
+            savedTicket.getSlaDeadline());
+
+    ticketEventPublisher.publish(KafkaEventType.TICKET_CREATED, ticketCreatedEvent);
+
+    return mapToTicketResponse(savedTicket);
   }
 
   public PagedTicketResponse getAllTickets(PagedTicketRequest request) {
@@ -149,10 +167,10 @@ public class TicketService {
   public void updateTicketStatus(
       String updaterId, String updaterRole, String ticketId, UpdateStatusRequest request) {
     Ticket ticket = findById(ticketId);
-    Status current = ticket.getStatus();
+    Status prev = ticket.getStatus();
     Status next = request.status();
 
-    if (!ALLOWED_TRANSITIONS.get(current).contains(next)) {
+    if (!ALLOWED_TRANSITIONS.get(prev).contains(next)) {
       throw new InvalidStatusTransitionException("Invalid status transition");
     }
     if (next == Status.RESOLVED) {
@@ -164,6 +182,29 @@ public class TicketService {
 
     ticket.setStatus(next);
     ticketRepository.save(ticket);
+
+    ticketEventPublisher.publish(
+        KafkaEventType.TICKET_UPDATED,
+        new TicketUpdatedEvent(
+            ticket.getId(),
+            prev,
+            next,
+            ticket.getPriority(),
+            ticket.getReporterId(),
+            ticket.getAssigneeId()));
+
+    if (next == Status.RESOLVED) {
+      ticketEventPublisher.publish(
+          KafkaEventType.TICKET_RESOLVED,
+          new TicketResolvedEvent(
+              ticket.getId(),
+              ticket.getTitle(),
+              ticket.getReporterId(),
+              ticket.getAssigneeId(),
+              Instant.now(),
+              ticket.getResolutionNote(),
+              ticket.isSlaBreached()));
+    }
   }
 
   public void assignTicket(
@@ -171,6 +212,11 @@ public class TicketService {
     Ticket ticket = findById(ticketId);
     ticket.setAssigneeId(request.assigneeId());
     ticketRepository.save(ticket);
+
+    ticketEventPublisher.publish(
+        KafkaEventType.TICKET_ASSIGNED,
+        new TicketAssignedEvent(
+            ticket.getId(), ticket.getTitle(), ticket.getAssigneeId(), assignedById));
   }
 
   public void updateTicketPriority(
@@ -179,6 +225,16 @@ public class TicketService {
     ticket.setPriority(request.priority());
     ticket.setSlaDeadline(calculateSlaDeadline(request.priority()));
     ticketRepository.save(ticket);
+
+    ticketEventPublisher.publish(
+        KafkaEventType.TICKET_UPDATED,
+        new TicketUpdatedEvent(
+            ticket.getId(),
+            ticket.getStatus(),
+            ticket.getStatus(),
+            ticket.getPriority(),
+            ticket.getReporterId(),
+            ticket.getAssigneeId()));
   }
 
   public TicketCommentResponse addComment(
