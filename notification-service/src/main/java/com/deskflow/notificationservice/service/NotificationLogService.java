@@ -6,7 +6,9 @@ import com.deskflow.notificationservice.dto.response.PagedNotificationResponse;
 import com.deskflow.notificationservice.dto.response.UnreadCountResponse;
 import com.deskflow.notificationservice.exception.ForbiddenException;
 import com.deskflow.notificationservice.exception.NotificationNotFoundException;
+import com.deskflow.notificationservice.model.KafkaEventType;
 import com.deskflow.notificationservice.model.NotificationLog;
+import com.deskflow.notificationservice.model.Type;
 import com.deskflow.notificationservice.repository.NotificationLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -89,5 +91,14 @@ public class NotificationLogService {
 
   public void pushToUser(String userId, NotificationResponse notification) {
     messagingTemplate.convertAndSendToUser(userId, "/topic/notifications", notification);
+  }
+
+  public void createAndPush(
+      String userId, Type type, KafkaEventType event, String title, String body, String ticketId) {
+
+    NotificationLog log = new NotificationLog(userId, type, event, title, body, ticketId);
+    NotificationLog saved = notificationLogRepository.save(log);
+
+    pushToUser(userId, mapToResponse(saved));
   }
 }
