@@ -1,5 +1,7 @@
 package com.deskflow.authservice.service;
 
+import com.deskflow.authservice.dto.event.UserRegisteredEvent;
+import com.deskflow.authservice.dto.event.UserRoleChangedEvent;
 import com.deskflow.authservice.dto.reponse.AuthTokenResponse;
 import com.deskflow.authservice.dto.reponse.RegisterResponse;
 import com.deskflow.authservice.dto.request.*;
@@ -7,6 +9,7 @@ import com.deskflow.authservice.exception.EmailAlreadyExistsException;
 import com.deskflow.authservice.exception.InvalidCredentialsException;
 import com.deskflow.authservice.exception.UserNotFoundException;
 import com.deskflow.authservice.model.AuthUser;
+import com.deskflow.authservice.model.KafkaEventType;
 import com.deskflow.authservice.model.RefreshToken;
 import com.deskflow.authservice.model.Role;
 import com.deskflow.authservice.repository.AuthUserRepository;
@@ -22,6 +25,7 @@ public class AuthUserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final RefreshTokenService refreshTokenService;
+  private final UserEventPublisher userEventPublisher;
 
   private RegisterResponse mapToRegisterResponse(AuthUser authUser) {
     return new RegisterResponse(authUser.getId(), authUser.getEmail(), authUser.getRole());
@@ -55,6 +59,10 @@ public class AuthUserService {
     Role role = Role.SUBMITTER;
 
     AuthUser saved = authUserRepository.save(new AuthUser(email, password, role));
+    UserRegisteredEvent userRegisteredEvent =
+        new UserRegisteredEvent(saved.getId(), saved.getEmail(), saved.getRole());
+
+    userEventPublisher.publish(KafkaEventType.USER_REGISTERED, userRegisteredEvent);
 
     return mapToRegisterResponse(saved);
   }
@@ -95,7 +103,13 @@ public class AuthUserService {
 
   public void updateUserRole(String userId, ChangeRoleRequest changeRoleRequest) {
     AuthUser user = findUserById(userId);
+    Role prev = user.getRole();
     user.setRole(changeRoleRequest.role());
     authUserRepository.save(user);
+
+    UserRoleChangedEvent userRoleChangedEvent =
+        new UserRoleChangedEvent(user.getId(), prev, user.getRole());
+
+    userEventPublisher.publish(KafkaEventType.USER_ROLE_CHANGED, userRoleChangedEvent);
   }
 }
