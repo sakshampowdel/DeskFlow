@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TicketEventPublisher {
 
-  private final KafkaTemplate<String, Object> kafkaTemplate;
+  private final KafkaTemplate<String, EventEnvelope<?>> kafkaTemplate;
 
-  public void publish(KafkaEventType topic, Object payload) {
+  public <T> void publish(KafkaEventType topic, T payload) {
     var envelope = new EventEnvelope<>(UUID.randomUUID().toString(), topic, Instant.now(), payload);
     kafkaTemplate.send(String.valueOf(topic), envelope);
   }
