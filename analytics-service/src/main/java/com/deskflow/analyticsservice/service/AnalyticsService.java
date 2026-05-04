@@ -5,6 +5,7 @@ import com.deskflow.analyticsservice.dto.event.TicketResolvedEvent;
 import com.deskflow.analyticsservice.dto.event.TicketUpdatedEvent;
 import com.deskflow.analyticsservice.dto.response.*;
 import com.deskflow.analyticsservice.model.KafkaEventType;
+import com.deskflow.analyticsservice.model.Status;
 import com.deskflow.analyticsservice.model.TicketEvent;
 import com.deskflow.analyticsservice.model.TicketMetric;
 import com.deskflow.analyticsservice.repository.TicketEventRepository;
@@ -24,7 +25,7 @@ public class AnalyticsService {
   private final TicketEventRepository ticketEventRepository;
   private final TicketMetricRepository ticketMetricRepository;
 
-  public void processTicketCreated(TicketCreatedEvent event) {
+  public void processTicketCreated(TicketCreatedEvent event, Instant occurredAt) {
     TicketEvent ticketEvent =
         new TicketEvent(
             event.ticketId(),
@@ -34,16 +35,15 @@ public class AnalyticsService {
             event.category(),
             event.reporterId(),
             null,
-            event.slaDeadline());
+            occurredAt);
     ticketEventRepository.save(ticketEvent);
 
     TicketMetric metric =
-        new TicketMetric(
-            event.ticketId(), event.priority(), event.category(), null, event.slaDeadline());
+        new TicketMetric(event.ticketId(), event.priority(), event.category(), null, occurredAt);
     ticketMetricRepository.save(metric);
   }
 
-  public void processTicketUpdated(TicketUpdatedEvent event) {
+  public void processTicketUpdated(TicketUpdatedEvent event, Instant occurredAt) {
     TicketEvent ticketEvent =
         new TicketEvent(
             event.ticketId(),
@@ -53,7 +53,7 @@ public class AnalyticsService {
             null,
             event.reporterId(),
             event.assigneeId(),
-            Instant.now());
+            occurredAt);
     ticketEventRepository.save(ticketEvent);
 
     ticketMetricRepository
@@ -61,21 +61,22 @@ public class AnalyticsService {
         .ifPresent(
             metric -> {
               metric.setAssigneeId(event.assigneeId());
+              metric.setPriority(event.priority());
               ticketMetricRepository.save(metric);
             });
   }
 
-  public void processTicketResolved(TicketResolvedEvent event) {
+  public void processTicketResolved(TicketResolvedEvent event, Instant occurredAt) {
     TicketEvent ticketEvent =
         new TicketEvent(
             event.ticketId(),
             KafkaEventType.TICKET_RESOLVED,
-            null,
+            Status.RESOLVED,
             null,
             null,
             event.reporterId(),
             event.assigneeId(),
-            event.resolvedAt());
+            occurredAt);
     ticketEventRepository.save(ticketEvent);
 
     ticketMetricRepository
@@ -142,6 +143,7 @@ public class AnalyticsService {
     Instant effectiveTo = to != null ? to : Instant.now();
 
     return ticketMetricRepository.findResolvedBetween(effectiveFrom, effectiveTo).stream()
+        .filter(m -> m.getResolvedAt() != null)
         .collect(
             Collectors.groupingBy(
                 metric -> metric.getResolvedAt().atZone(ZoneOffset.UTC).toLocalDate(),
