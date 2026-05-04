@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "ticket_metrics")
 @Getter
+@Setter
 @NoArgsConstructor
 public class TicketMetric {
 
@@ -18,11 +19,11 @@ public class TicketMetric {
   private Category category;
   private Instant createdAt;
 
-  @Setter private String assigneeId;
-  @Setter private Instant resolvedAt;
-  @Setter private Long timeToResolveMs;
-  @Setter private Boolean slaBreached;
-  @Setter private String resolutionStatus;
+  private String assigneeId;
+  private Instant resolvedAt;
+  private Long timeToResolveMs;
+  private Boolean slaBreached;
+  private String resolutionStatus;
 
   public TicketMetric(
       String ticketId, Priority priority, Category category, String assigneeId, Instant createdAt) {
