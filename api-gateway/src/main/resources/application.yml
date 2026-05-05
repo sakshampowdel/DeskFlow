@@ -1,8 +1,8 @@
 server:
-  port: 8080
+  port: ${GATEWAY_PORT:8080}
 
 jwt:
-  secret: bPdGAxSjllAWFQj8KR5Nm0/2gz56Xc+tx+ZlqefIyW0=
+  secret: ${JWT_SECRET:bPdGAxSjllAWFQj8KR5Nm0/2gz56Xc+tx+ZlqefIyW0=}
 
 logging:
   level:
@@ -20,7 +20,7 @@ spring:
           routes:
             # --- AUTH SERVICE ---
             - id: auth-role-management
-              uri: http://localhost:8081
+              uri: http://auth-service:8081
               predicates:
                 - Path=/auth/role/**
               filters:
@@ -29,20 +29,20 @@ spring:
                     requiredRoles: [ "ADMIN" ]
 
             - id: auth-service-public
-              uri: http://localhost:8081
+              uri: http://auth-service:8081
               predicates:
                 - Path=/auth/**
 
             # --- USER SERVICE ---
             - id: user-service-internal-block
-              uri: http://localhost:8082
+              uri: http://user-service:8082
               predicates:
                 - Path=/users/internal/**
               filters:
                 - SetStatus=403
 
             - id: user-service-me
-              uri: http://localhost:8082
+              uri: http://user-service:8082
               predicates:
                 - Path=/users/me
               filters:
@@ -51,7 +51,7 @@ spring:
                     requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
 
             - id: user-service-lookup
-              uri: http://localhost:8082
+              uri: http://user-service:8082
               predicates:
                 - Path=/users/{id}, /users
               filters:
@@ -61,7 +61,7 @@ spring:
 
             # --- TICKET SERVICE ---
             - id: ticket-service-my
-              uri: http://localhost:8083
+              uri: http://ticket-service:8083
               predicates:
                 - Path=/tickets/my
               filters:
@@ -70,7 +70,7 @@ spring:
                     requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
 
             - id: ticket-service-staff
-              uri: http://localhost:8083
+              uri: http://ticket-service:8083
               predicates:
                 - Path=/tickets/**
               filters:
@@ -80,7 +80,7 @@ spring:
 
             # --- NOTIFICATION SERVICE ---
             - id: notification-service
-              uri: http://localhost:8084
+              uri: http://notification-service:8084
               predicates:
                 - Path=/notifications/**
               filters:
@@ -90,7 +90,7 @@ spring:
 
             # --- ANALYTICS SERVICE ---
             - id: analytics-service
-              uri: http://localhost:8085
+              uri: http://analytics-service:8085
               predicates:
                 - Path=/analytics/**
               filters:
