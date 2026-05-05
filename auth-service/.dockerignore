@@ -1,0 +1,14 @@
+# Ignore the entire target folder by default
+target/*
+
+# ALLOWED
+!target/*.jar
+
+# Ignore everything else that clutters the build context
+src/
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml
+.idea/
+.git/

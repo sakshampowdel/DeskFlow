@@ -4,7 +4,7 @@ spring:
 
   # MongoDB Configuration
   mongodb:
-    uri: mongodb://${MONGO_ROOT_USER:admin}:${MONGO_ROOT_PASSWORD:deskflow_pass}@mongodb:27017/ticket-db?authSource=admin
+    uri: mongodb://${MONGO_ROOT_USER:admin}:${MONGO_ROOT_PASSWORD:deskflow_pass}@ticket-mongodb:27017/ticket-db?authSource=admin
   data:
     mongodb:
       auto-index-creation: true

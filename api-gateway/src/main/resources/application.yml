@@ -19,6 +19,8 @@ spring:
         webflux:
           routes:
             # --- AUTH SERVICE ---
+
+            # ADMIN only — must be above auth-service-public to avoid falling through
             - id: auth-role-management
               uri: http://auth-service:8081
               predicates:
@@ -28,12 +30,25 @@ spring:
                   args:
                     requiredRoles: [ "ADMIN" ]
 
+            # Any authenticated — logout and password change require a valid JWT
+            - id: auth-service-authenticated
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/auth/logout, /auth/password
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            # Public — register, login, refresh require no JWT
             - id: auth-service-public
               uri: http://auth-service:8081
               predicates:
                 - Path=/auth/**
 
             # --- USER SERVICE ---
+
+            # Blocked — internal endpoint must never be reachable from outside
             - id: user-service-internal-block
               uri: http://user-service:8082
               predicates:
@@ -41,6 +56,7 @@ spring:
               filters:
                 - SetStatus=403
 
+            # Any authenticated — own profile read and update
             - id: user-service-me
               uri: http://user-service:8082
               predicates:
@@ -50,16 +66,43 @@ spring:
                   args:
                     requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
 
+            # ADMIN only — must be above user-service-lookup so /users/{id}/deactivate
+            # doesn't fall through to the AGENT-permitted route
+            - id: user-service-deactivate
+              uri: http://user-service:8082
+              predicates:
+                - Path=/users/{id}/deactivate
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "ADMIN" ]
+
+            # ADMIN only — paginated list of all users
+            - id: user-service-list
+              uri: http://user-service:8082
+              predicates:
+                - Path=/users
+                - Method=GET
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "ADMIN" ]
+
+            # AGENT, ADMIN — fetch a specific user by ID
             - id: user-service-lookup
               uri: http://user-service:8082
               predicates:
-                - Path=/users/{id}, /users
+                - Path=/users/{id}
+                - Method=GET
               filters:
                 - name: JwtAuthentication
                   args:
                     requiredRoles: [ "AGENT", "ADMIN" ]
 
             # --- TICKET SERVICE ---
+
+            # SUBMITTER only — own tickets list; must be above ticket-service-staff
+            # so /tickets/my isn't swallowed by the /tickets/** catch-all
             - id: ticket-service-my
               uri: http://ticket-service:8083
               predicates:
@@ -67,8 +110,54 @@ spring:
               filters:
                 - name: JwtAuthentication
                   args:
+                    requiredRoles: [ "SUBMITTER" ]
+
+            # Any authenticated — comments and attachments are open to all roles;
+            # must be above ticket-service-staff to avoid being blocked by its AGENT/ADMIN restriction
+            - id: ticket-service-comments-and-attachments
+              uri: http://ticket-service:8083
+              predicates:
+                - Path=/tickets/{id}/comments, /tickets/{id}/attachments
+              filters:
+                - name: JwtAuthentication
+                  args:
                     requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
 
+            # Any authenticated — fetch a single ticket by ID;
+            # service layer enforces that SUBMITTERs can only see their own
+            - id: ticket-service-by-id
+              uri: http://ticket-service:8083
+              predicates:
+                - Path=/tickets/{id}
+                - Method=GET
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            # Any authenticated — create a ticket
+            - id: ticket-service-create
+              uri: http://ticket-service:8083
+              predicates:
+                - Path=/tickets
+                - Method=POST
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            # AGENT, ADMIN — paginated list of all tickets
+            - id: ticket-service-list
+              uri: http://ticket-service:8083
+              predicates:
+                - Path=/tickets
+                - Method=GET
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "AGENT", "ADMIN" ]
+
+            # AGENT, ADMIN — all remaining ticket operations (status, assign, priority)
             - id: ticket-service-staff
               uri: http://ticket-service:8083
               predicates:
@@ -79,6 +168,16 @@ spring:
                     requiredRoles: [ "AGENT", "ADMIN" ]
 
             # --- NOTIFICATION SERVICE ---
+
+            # WebSocket — not yet configured, blocked until implemented
+            - id: notification-service-ws
+              uri: no://op
+              predicates:
+                - Path=/ws/**
+              filters:
+                - SetStatus=403
+
+            # Any authenticated — notification inbox REST endpoints
             - id: notification-service
               uri: http://notification-service:8084
               predicates:
@@ -89,6 +188,8 @@ spring:
                     requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
 
             # --- ANALYTICS SERVICE ---
+
+            # ADMIN only — all analytics endpoints
             - id: analytics-service
               uri: http://analytics-service:8085
               predicates:

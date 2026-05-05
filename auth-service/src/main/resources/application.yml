@@ -4,8 +4,7 @@ spring:
 
   # MongoDB Configuration
   mongodb:
-    # Host 'mongodb' matches the service name in docker-compose.yml
-    uri: mongodb://${MONGO_ROOT_USER:admin}:${MONGO_ROOT_PASSWORD:deskflow_pass}@mongodb:27017/auth-db?authSource=admin
+    uri: mongodb://${MONGO_ROOT_USER:admin}:${MONGO_ROOT_PASSWORD:deskflow_pass}@auth-mongodb:27017/auth-db?authSource=admin
   data:
     mongodb:
       auto-index-creation: true
