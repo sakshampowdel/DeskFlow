@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+jwt:
+  secret: bPdGAxSjllAWFQj8KR5Nm0/2gz56Xc+tx+ZlqefIyW0=
+
 logging:
   level:
     org.springframework.cloud.gateway: TRACE
@@ -15,29 +18,85 @@ spring:
       server:
         webflux:
           routes:
-          # Auth Service: http://localhost:8080/auth/** -> http://localhost:8081/**
-          - id: auth-service
-            uri: http://localhost:8081
-            predicates:
-              - Path=/auth/**
-            filters:
-              - CustomLogging # Matches the class name minus "FilterFactory"
+            # --- AUTH SERVICE ---
+            - id: auth-role-management
+              uri: http://localhost:8081
+              predicates:
+                - Path=/auth/role/**
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "ADMIN" ]
 
-          # User Service: http://localhost:8080/users/** -> http://localhost:8082/**
-          - id: user-service
-            uri: http://localhost:8082
-            predicates:
-              - Path=/users/**
-            filters:
-              - CustomLogging
+            - id: auth-service-public
+              uri: http://localhost:8081
+              predicates:
+                - Path=/auth/**
 
-          # Ticket Service: http://localhost:8080/tickets/** -> http://localhost:8083/**
-          - id: ticket-service
-            uri: http://localhost:8083
-            predicates:
-              - Path=/tickets/**
-            filters:
-              - StripPrefix=1
+            # --- USER SERVICE ---
+            - id: user-service-internal-block
+              uri: http://localhost:8082
+              predicates:
+                - Path=/users/internal/**
+              filters:
+                - SetStatus=403
+
+            - id: user-service-me
+              uri: http://localhost:8082
+              predicates:
+                - Path=/users/me
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            - id: user-service-lookup
+              uri: http://localhost:8082
+              predicates:
+                - Path=/users/{id}, /users
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "AGENT", "ADMIN" ]
+
+            # --- TICKET SERVICE ---
+            - id: ticket-service-my
+              uri: http://localhost:8083
+              predicates:
+                - Path=/tickets/my
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            - id: ticket-service-staff
+              uri: http://localhost:8083
+              predicates:
+                - Path=/tickets/**
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "AGENT", "ADMIN" ]
+
+            # --- NOTIFICATION SERVICE ---
+            - id: notification-service
+              uri: http://localhost:8084
+              predicates:
+                - Path=/notifications/**
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "SUBMITTER", "AGENT", "ADMIN" ]
+
+            # --- ANALYTICS SERVICE ---
+            - id: analytics-service
+              uri: http://localhost:8085
+              predicates:
+                - Path=/analytics/**
+              filters:
+                - name: JwtAuthentication
+                  args:
+                    requiredRoles: [ "ADMIN" ]
 
 eureka:
   client:
