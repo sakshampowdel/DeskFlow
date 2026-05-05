@@ -97,7 +97,3 @@ spring:
                 - name: JwtAuthentication
                   args:
                     requiredRoles: [ "ADMIN" ]
-
-eureka:
-  client:
-    enabled: false
